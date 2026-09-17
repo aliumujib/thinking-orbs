@@ -28,6 +28,9 @@ import thinking.orbs.resolvePreset
 
 enum class OrbTheme { Auto, Dark, Light }
 
+/** Snap an arbitrary logical size to the nearest shipped preset (64 or 20). */
+private fun drawSizePreset(sizeDp: Int): Int = if (sizeDp <= 42) 20 else 64
+
 /**
  * Jetpack Compose ThinkingOrb.
  *
@@ -35,11 +38,16 @@ enum class OrbTheme { Auto, Dark, Light }
  * contract as the planned Swift port): filled circles for dots, strokes
  * for the `connecting` web. Golden-vector tests live in the JVM engine
  * module and do not need an emulator.
+ *
+ * `sizeDp` is the logical preset — 64 (chat-avatar) or 20 (inline). The two
+ * presets are separate tunings, not a scale factor; any other value snaps to
+ * the nearest one. The finished draw list is then scaled to the Canvas's real
+ * pixel size so the orb fills its box at any display density.
  */
 @Composable
 fun ThinkingOrb(
     state: String = "working",
-    sizePx: Int = 64,
+    sizeDp: Int = 64,
     theme: OrbTheme = OrbTheme.Auto,
     speed: Float = 1f,
     paused: Boolean = false,
@@ -61,11 +69,12 @@ fun ThinkingOrb(
         )
         scale == 0f
     }
-    val resolved = remember(state, sizePx) { resolvePreset(state, sizePx) }
+    val preset = drawSizePreset(sizeDp)
+    val resolved = remember(state, preset) { resolvePreset(state, preset) }
     val effSpeed = resolved.speed * speed
     var t by remember { mutableStateOf(if (reduced) REDUCED_MOTION_T else 0.0) }
 
-    LaunchedEffect(paused, reduced, effSpeed, state, sizePx) {
+    LaunchedEffect(paused, reduced, effSpeed, state, preset) {
         if (reduced) {
             t = REDUCED_MOTION_T
             return@LaunchedEffect
@@ -81,22 +90,30 @@ fun ThinkingOrb(
         }
     }
 
-    val frame: OrbFrame = remember(t, state, sizePx) { frameFor(state, sizePx, t) }
     val label = contentDescription ?: LABELS[state] ?: "Thinking…"
-    val dp = sizePx.toFloat()
 
     Canvas(
         modifier
-            .size(dp.dp)
+            .size(sizeDp.dp)
             .semantics { this.contentDescription = label },
     ) {
+        // Geometry is tuned in the logical preset unit (64/20). Draw at the
+        // canvas's real pixel size so the orb fills the box at any density,
+        // capping the effective scale at 2x to match the web DPR cap.
+        val px = size.minDimension
+        val scale = (px / sizeDp.toFloat()).coerceAtMost(2f)
+        val drawSize = (sizeDp * scale)
+        val frame: OrbFrame = frameFor(state, preset, t)
+        val k = drawSize / preset.toFloat() // px per logical (preset) unit
+        val pad = (px - drawSize) / 2f
+
         for (l in frame.lines) {
             val g = inkGrey(l.white, dark) / 255f
             drawLine(
                 color = Color(g, g, g, l.a.toFloat()),
-                start = Offset(l.x1.toFloat(), l.y1.toFloat()),
-                end = Offset(l.x2.toFloat(), l.y2.toFloat()),
-                strokeWidth = l.w.toFloat(),
+                start = Offset(pad + l.x1.toFloat() * k, pad + l.y1.toFloat() * k),
+                end = Offset(pad + l.x2.toFloat() * k, pad + l.y2.toFloat() * k),
+                strokeWidth = (l.w.toFloat() * k).coerceAtLeast(1f),
                 cap = StrokeCap.Butt,
             )
         }
@@ -104,8 +121,8 @@ fun ThinkingOrb(
             val g = inkGrey(d.white, dark) / 255f
             drawCircle(
                 color = Color(g, g, g, d.a.toFloat()),
-                radius = d.r.toFloat(),
-                center = Offset(d.x.toFloat(), d.y.toFloat()),
+                radius = d.r.toFloat() * k,
+                center = Offset(pad + d.x.toFloat() * k, pad + d.y.toFloat() * k),
             )
         }
     }
