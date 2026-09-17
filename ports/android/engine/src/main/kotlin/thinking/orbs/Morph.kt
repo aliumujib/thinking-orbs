@@ -53,8 +53,13 @@ private const val SEG = HOLD + MORPH
 
 fun frameMorph(size: Double, t: Double, o: ModeOpts): OrbFrame {
     val K = CYCLE.size
-    val tc = t % (SEG * K)
-    val k = floor(tc / SEG).toInt()
+    // Normalise to a positive phase in [0, SEG*K): Kotlin's % keeps the sign
+    // of `t`, and the render clock can momentarily be negative at startup,
+    // which would make `k` negative and index CYCLE out of bounds. The web's
+    // performance.now() clock is always positive, so this matches it.
+    val period = SEG * K
+    val tc = ((t % period) + period) % period
+    val k = floor(tc / SEG).toInt().coerceIn(0, K - 1)
     val local = tc - k * SEG
     val m = if (local > HOLD) smoothE((local - HOLD) / MORPH) else 0.0
     val sprd = o.get("spread", 1.0)

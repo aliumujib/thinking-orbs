@@ -15,11 +15,18 @@ private data class SolveCycle(val amount: DoubleArray, val active: Int)
 
 private fun solveCycle(time: Double, count: Int, slotDur: Double, rest: Double): SolveCycle {
     val cyc = 2 * count * slotDur + rest
-    val tc = time % cyc
+    // Kotlin's % keeps the sign of the dividend, so a negative `time` (the
+    // render clock can momentarily go negative at startup) would make `tc`
+    // negative and `slot` = -1. Normalise into [0, cyc) as a positive phase,
+    // matching the always-positive `performance.now()` clock on web.
+    val tc = ((time % cyc) + cyc) % cyc
     val amount = DoubleArray(count)
     var active = -1
     if (tc < 2 * count * slotDur) {
-        val slot = floor(tc / slotDur).toInt()
+        // clamp guards the float boundary where tc < 2*count*slotDur is true
+        // but floor(tc/slotDur) rounds up to 2*count (JS tolerates the stray
+        // index; Kotlin's primitive array throws).
+        val slot = floor(tc / slotDur).toInt().coerceIn(0, 2 * count - 1)
         val p = (tc - slot * slotDur) / slotDur
         val cl = min(1.0, p / 0.7)
         val ep = 1 - Math.pow(1 - cl, 3.0)
