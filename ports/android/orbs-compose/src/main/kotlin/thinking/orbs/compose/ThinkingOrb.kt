@@ -79,11 +79,17 @@ fun ThinkingOrb(
             t = REDUCED_MOTION_T
             return@LaunchedEffect
         }
-        val origin = System.nanoTime()
+        // Seed the origin from the first frame's own timestamp, not
+        // System.nanoTime(): withFrameNanos' `now` (Choreographer frame time)
+        // can predate a separately-sampled nanoTime, yielding a negative
+        // elapsed on the first frame. Guarding at >= 0 keeps the shared engine
+        // clock non-negative (the web's performance.now() is always positive).
+        var origin = -1L
         while (true) {
             withFrameNanos { now ->
+                if (origin < 0L) origin = now
                 if (!paused) {
-                    val elapsed = (now - origin) / 1_000_000_000.0
+                    val elapsed = ((now - origin).coerceAtLeast(0L)) / 1_000_000_000.0
                     t = elapsed * effSpeed
                 }
             }
