@@ -10,3 +10,5 @@ dist-playground
 ports/android/local.properties
 ports/android/**/build/
 ports/android/.gradle/
+
+docs/superpowers/
