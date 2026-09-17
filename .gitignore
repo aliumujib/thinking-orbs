@@ -6,3 +6,7 @@ dist-playground
 .DS_Store
 *.log
 .wrangler
+
+ports/android/local.properties
+ports/android/**/build/
+ports/android/.gradle/

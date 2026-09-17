@@ -1,19 +1,7 @@
 plugins {
-    kotlin("jvm") version "2.0.21"
-}
-
-repositories {
-    mavenCentral()
-}
-
-kotlin {
-    jvmToolchain(17)
-}
-
-dependencies {
-    testImplementation(kotlin("test"))
-}
-
-tasks.test {
-    useJUnitPlatform()
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.kotlin.jvm) apply false
+    alias(libs.plugins.kotlin.compose) apply false
 }
