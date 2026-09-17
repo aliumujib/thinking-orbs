@@ -4,6 +4,15 @@ Kotlin transcription of the thinking-orbs geometry (same approach as the
 Swift plan in `PORT_PLAN.md`): math from `spec/orbs-spec.json`, Compose
 `Canvas` filled circles plus strokes for the `connecting` web.
 
+![All nine states animating in the demo app](docs/media/demo.gif)
+
+The demo running on an emulator — dark and light themes (ink polarity mirrors
+with the theme):
+
+| Dark | Light |
+|---|---|
+| ![dark](docs/media/demo-dark.png) | ![light](docs/media/demo-light.png) |
+
 ## Layout
 
 A 3-module Gradle build. The engine stays a pure Kotlin/JVM module so its
