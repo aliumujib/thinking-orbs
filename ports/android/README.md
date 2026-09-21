@@ -60,6 +60,36 @@ cd ports/android
 ./gradlew :engine:test
 ```
 
+## Use it in your app (JitPack)
+
+Published from this fork via [JitPack](https://jitpack.io). Add the repo, then
+depend on `orbs-compose` — the pure-Kotlin `engine` comes in transitively.
+
+```kotlin
+// settings.gradle.kts
+dependencyResolutionManagement {
+    repositories {
+        google(); mavenCentral()
+        maven("https://jitpack.io")
+    }
+}
+
+// app/build.gradle.kts
+implementation("com.github.aliumujib.thinking-orbs:orbs-compose:android-v0.1.0")
+// only if you want the geometry without Compose:
+// implementation("com.github.aliumujib.thinking-orbs:engine:android-v0.1.0")
+```
+
+Then:
+
+```kotlin
+ThinkingOrb(state = "searching", sizeDp = 64, theme = OrbTheme.Auto)
+```
+
+Releases are cut as `android-vX.Y.Z` tags (kept separate from the upstream
+web-library `vX.Y.Z` tags). Build status:
+<https://jitpack.io/#aliumujib/thinking-orbs>
+
 ## Build the app
 
 ```bash
