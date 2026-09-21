@@ -1,0 +1,14 @@
+# The Android/Compose Gradle build lives in ports/android/, not the repo root
+# (the root is the TypeScript/web library). Tell JitPack to build there and
+# publish both library modules to the local Maven repo it harvests. The :demo
+# app is intentionally not published.
+#
+# Consumers (after tagging vX.Y.Z on this fork):
+#   repositories { maven("https://jitpack.io") }
+#   implementation("com.github.aliumujib.thinking-orbs:orbs-compose:vX.Y.Z")
+#   // :engine comes in transitively; add it explicitly only if you use it alone.
+jdk:
+  - openjdk17
+install:
+  - cd ports/android
+  - ./gradlew :engine:publishToMavenLocal :orbs-compose:publishToMavenLocal -Pversion=$VERSION
